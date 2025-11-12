@@ -17,10 +17,14 @@ List your group members, including their student numbers, here:
 ## \<\<Cyclones\>\>
 
 ```{r load_data1}
+
+# Set the base URL for NOAA cyclone data
 cyclone_data_address <- "https://www.nhc.noaa.gov/data/hurdat/"
+# Define filenames for Atlantic and Northeast Pacific cyclone datasets
 at_cyclone_filename <- "hurdat2-1851-2022-050423.txt"
 np_cyclone_filename <- "hurdat2-nepac-1949-2022-050423.txt"
 
+# Define column names for the detailed observation data that will be parsed
 new_columns <- c("status", "latitude", "longitude", "max_wind",
     "min_pressure", "NE_extend_34", "SE_extend_34", "SW_extend_34",
     "NW_extend_34", "NE_extend_50", "SE_extend_50", "SW_extend_50",
@@ -28,61 +32,72 @@ new_columns <- c("status", "latitude", "longitude", "max_wind",
     "NW_extend_64", "r_max_wind"
 )
 
+#Process Atlantic cyclone data
 at_cyclone <- str_c(cyclone_data_address, at_cyclone_filename, sep = "") |>
-    read_csv(
+  # Read the CSV file with temporary column names (1-4)  
+  read_csv(
         col_names = c(as.character(1:4)),
         progress = FALSE,
         show_col_types = FALSE
     ) |>
+  # Split the 4th column into multiple columns
     separate_wider_delim(
         cols = `4`,
         # Set the delim and the names
         delim = ",",
         names = new_columns
     ) |>
+  #Data cleaning
     mutate(
+      # Remove whitespace from all columns
         across(everything(), str_trim),
-        # make "-999" NAs, make "-99" NAs
-        # Create columns BasinNumberYear, Name, and Entries
+        # Convert missing values to NA
         across(everything(), ~na_if(., "-999")),
         across(everything(), ~na_if(., "-99")),
+        # Create storm data columns
         BasinNumberYear = ifelse(is.na(status), `1`, NA),
         Name = ifelse(is.na(status), `2`, NA),
         Entries = ifelse(is.na(status), `3`, NA)
     ) |>
+  # Reorganize columns to put data first
     relocate(BasinNumberYear, Name, Entries) |>
+  # Fill down data values to observation rows for each storm
     fill(BasinNumberYear, Name, Entries) |>
+  # Remove header rows, keeping only observation rows
     filter(!is.na(status))  |>
+  # Remove the Entries column as it is no longer needed
     select(-Entries) |>
+  # Split BasinNumberYear into its components
     separate_wider_position(
         BasinNumberYear,
-        # Specify the widths
         widths = c(
-        Basin = 2,
-        Number = 2,
-        NameYear = 4
+        Basin = 2,   # Basin code
+        Number = 2,  # Storm number for the year
+        NameYear = 4 # Year of the storm
         )
     ) |>
+  # Split date information from column 1
     separate_wider_position(
         `1`,
-        # Specify the widths
         widths = c(
-        ObservYear = 4,
-        Month = 2,
-        Day = 2
+        ObservYear = 4,  # Observation year
+        Month = 2,       # Observation month
+        Day = 2          # Observation day
         )
     ) |>
+  # Split time information from column 2
     separate_wider_position(
         `2`,
-        # Specify the widths
         widths = c(
-          Hour = 2,
-          Minute = 2
+          Hour = 2,    # Observation hour
+          Minute = 2   # Observation minute
         )
     ) |>
+  # Rename column 3 to more better name
     rename(
-        Identifier = `3`
+        Identifier = `3`   # Record identifier
     ) |>
+  # Convert character columns to integers
     mutate(
         across(
             c(NameYear, ObservYear, Month, Day, Hour,
@@ -90,8 +105,10 @@ at_cyclone <- str_c(cyclone_data_address, at_cyclone_filename, sep = "") |>
             as.integer
         )
     ) |>
+  # Convert measurement columns to numeric
     mutate(across(max_wind:r_max_wind, as.numeric))
 
+# Process Northeast Pacific cyclone data using the same steps as above
 np_cyclone <- str_c(cyclone_data_address, np_cyclone_filename, sep = "") |>
     # ALL of the steps all over again
     read_csv(
@@ -157,46 +174,51 @@ np_cyclone <- str_c(cyclone_data_address, np_cyclone_filename, sep = "") |>
     ) |>
     mutate(across(max_wind:r_max_wind, as.numeric))
 
+# Combine Atlantic and Pacific data into a single dataset
 cyclones_data_update_0 <- bind_rows(at_cyclone, np_cyclone)
 
+# Helper function to convert latitude/longitude from string to numeric
+# Handles directions by applying negative sign for W and S
 convert_latlon <- function(latlon) {
     parse_number(latlon) * if_else(str_detect(latlon, "[WS]"), -1, 1
   )
 }
 
+# Apply coordinate conversion
 cyclones_data_update_1 <- cyclones_data_update_0 |>
     mutate(
-        lat = convert_latlon(latitude),
-        lon = convert_latlon(longitude)
+        lat = convert_latlon(latitude),   # Convert latitude to numeric
+        lon = convert_latlon(longitude)   # Convert longitude to numeric
     )
 
+# Create proper datetime column from date/time components
 cyclones_data_update_2 <- cyclones_data_update_1 |>
     mutate(
         date = make_datetime(ObservYear, Month, Day, Hour, Minute)
     )
 
+# Define category levels for hurricane classification
 cat_levels <- c("TD", "TS", "1", "2", "3", "4", "5")
 
+# Assign hurricane categories based on maximum wind speed
 cyclones_data <- cyclones_data_update_2 |>
     mutate(
         category = ordered(
             case_when(
-                (max_wind <= 33) ~ "TD",
-                (max_wind <= 63) ~ "TS",
-                (max_wind <= 82) ~ "1",
-                (max_wind <= 95) ~ "2",
-                (max_wind <= 112) ~ "3",
-                (max_wind <= 136) ~ "4",
-                (max_wind >= 137) ~ "5"
+                (max_wind <= 33) ~ "TD",  # Tropical Depression
+                (max_wind <= 63) ~ "TS",  # Tropical Storm
+                (max_wind <= 82) ~ "1",   # Category 1 Hurricane
+                (max_wind <= 95) ~ "2",   # Category 2 Hurricane
+                (max_wind <= 112) ~ "3",  # Category 3 Hurricane
+                (max_wind <= 136) ~ "4",  # Category 4 Hurricane
+                (max_wind >= 137) ~ "5"   # Category 5 Hurricane
                 ),
-            levels = cat_levels
+            levels = cat_levels # set levels as ordered factor
         )
     )
 
+# save as parquet
 write_parquet(cyclones_data, sink = "cyclones_data.parquet")
-
-# Put in your code to load in the data set, along with any
-# necessary cleaning beyond what was done in Part 1
 
 # Note that the code in this document will not be shown
 # when you click "knit", so the placement of this code
@@ -211,25 +233,34 @@ In order to clean the data, we \<\<steps to clean the data, concise but precise 
 ## \<\<Climate Change\>\>
 
 ```{r load_data2}
+# Set URL for climate opinion survey dataset
 climate_opinion_address <- "https://data.humdata.org/dataset/dc9f2ca4-8b62-4747-89b1-db426ce617a0/resource/6041db5f-8190-47ff-a10b-9841325de841/download/climate_change_opinion_survey_2022_aggregated.xlsx"
 
+# Get the names of all sheets in the Excel workbook
 climate_sheet_names <- climate_opinion_address |>
     loadWorkbook() |>
     names()
 
+# Define the sheet name we want to work with
 aware_sheet_name <- "climate_awareness"
 
+# Process the climate awareness data
 climate_awareness <- climate_opinion_address |>
+  # Read the sheet from the Excel file
     read.xlsx(
         sheet = aware_sheet_name
     ) |>
+    # Transform the data from wide to long
+    # Keep the climate_awareness column as is, pivot all other columns
     pivot_longer(
-        cols = !contains(aware_sheet_name),
-        names_to = "country",
-        values_to = "score"
+        cols = !contains(aware_sheet_name),  # Select all columns except "climate_awareness"
+        names_to = "country",  # Column names become values in new "country" column
+        values_to = "score"    # Cell values become values in new "score" column
     ) |>
+  # Clean and standardize the response categories
     mutate(
         climate_awareness = case_when(
+          # Convert responses to concise, standardized codes
             climate_awareness == "I have never heard of it" ~ "aware_no",
             climate_awareness == "I know a little about it" ~ "aware_alittle",
             climate_awareness == "I know a moderate amount about it" ~
@@ -239,17 +270,16 @@ climate_awareness <- climate_opinion_address |>
             climate_awareness == "(Unweighted Base)" ~ "aware_base"
         )
     ) |>
+  # Rename the main categorical column to "answer"
     rename(answer = climate_awareness) |>
+  # Transform back to wide format with response categories as separate columns
     pivot_wider(
         names_from = answer,
         values_from = score
     )
 
+# Save the processed data in parquet format
 write_parquet(climate_awareness, "climate_awareness.parquet")
-
-
-# Put in your code to load in the data set, along with any
-# necessary cleaning beyond what was done in Part 1
 
 # Reminder: do NOT print your data to the screen unless it's
 # completely necessary
@@ -262,17 +292,21 @@ In order to clean the data, we \<\<steps to clean the data, concise but precise 
 ## \<\<Happiness\>\>
 
 ```{r load_data3}
+# read excel fie containing the happiness data
 happiness <- read.xlsx("DataForTable2.1.xlsx") |>
+  # Clean column names
     janitor::clean_names() |>
+  # Rename "country_name" to "country" for consistency
     rename(country = country_name) |>
+  # Remove rows with missing happiness scores
     filter(!is.na(ladder_score)) |>
+  # Group data by country to process each country separately
     group_by(country) |>
+  # Sort years in descending order within each country
     arrange(desc(year)) |>
-    slice(1) |>
+  # Remove grouping for future operations
     ungroup()
 
-# Put in your code to load in the data set, along with any
-# necessary cleaning beyond what was done in Part 1
 ```
 
 The data come from \<<place>\> and detail \<<more specific description of the data>\>.
