@@ -27,7 +27,6 @@ new_columns <- c("status", "latitude", "longitude", "max_wind",
     "NW_extend_50", "NE_extend_64", "SE_extend_64", "SW_extend_64",
     "NW_extend_64", "r_max_wind"
 )
-# Same steps as in A2, but you can put them all in the same pipeline!
 
 at_cyclone <- str_c(cyclone_data_address, at_cyclone_filename, sep = "") |>
     read_csv(
