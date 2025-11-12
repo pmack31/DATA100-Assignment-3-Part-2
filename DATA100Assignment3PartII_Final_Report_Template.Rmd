@@ -8,16 +8,194 @@ output: pdf_document
 
 List your group members, including their student numbers, here:
 
--   John K. Samson (\#########)
--   John Darnielle (\#########)
--   Craig Finn (\#########)
-
+-   Peter MacKenzie (169139553)
+-   Frank Castiglione (169079592)
+-   Josh Di Maulo (169112454)
 
 # Data Description
 
-## \<\<Data Set 1\>\>
+## \<\<Cyclones\>\>
 
 ```{r load_data1}
+cyclone_data_address <- "https://www.nhc.noaa.gov/data/hurdat/"
+at_cyclone_filename <- "hurdat2-1851-2022-050423.txt"
+np_cyclone_filename <- "hurdat2-nepac-1949-2022-050423.txt"
+
+new_columns <- c("status", "latitude", "longitude", "max_wind",
+    "min_pressure", "NE_extend_34", "SE_extend_34", "SW_extend_34",
+    "NW_extend_34", "NE_extend_50", "SE_extend_50", "SW_extend_50",
+    "NW_extend_50", "NE_extend_64", "SE_extend_64", "SW_extend_64",
+    "NW_extend_64", "r_max_wind"
+)
+# Same steps as in A2, but you can put them all in the same pipeline!
+
+at_cyclone <- str_c(cyclone_data_address, at_cyclone_filename, sep = "") |>
+    read_csv(
+        col_names = c(as.character(1:4)),
+        progress = FALSE,
+        show_col_types = FALSE
+    ) |>
+    separate_wider_delim(
+        cols = `4`,
+        # Set the delim and the names
+        delim = ",",
+        names = new_columns
+    ) |>
+    mutate(
+        across(everything(), str_trim),
+        # make "-999" NAs, make "-99" NAs
+        # Create columns BasinNumberYear, Name, and Entries
+        across(everything(), ~na_if(., "-999")),
+        across(everything(), ~na_if(., "-99")),
+        BasinNumberYear = ifelse(is.na(status), `1`, NA),
+        Name = ifelse(is.na(status), `2`, NA),
+        Entries = ifelse(is.na(status), `3`, NA)
+    ) |>
+    relocate(BasinNumberYear, Name, Entries) |>
+    fill(BasinNumberYear, Name, Entries) |>
+    filter(!is.na(status))  |>
+    select(-Entries) |>
+    separate_wider_position(
+        BasinNumberYear,
+        # Specify the widths
+        widths = c(
+        Basin = 2,
+        Number = 2,
+        NameYear = 4
+        )
+    ) |>
+    separate_wider_position(
+        `1`,
+        # Specify the widths
+        widths = c(
+        ObservYear = 4,
+        Month = 2,
+        Day = 2
+        )
+    ) |>
+    separate_wider_position(
+        `2`,
+        # Specify the widths
+        widths = c(
+          Hour = 2,
+          Minute = 2
+        )
+    ) |>
+    rename(
+        Identifier = `3`
+    ) |>
+    mutate(
+        across(
+            c(NameYear, ObservYear, Month, Day, Hour,
+                Minute, Number),
+            as.integer
+        )
+    ) |>
+    mutate(across(max_wind:r_max_wind, as.numeric))
+
+np_cyclone <- str_c(cyclone_data_address, np_cyclone_filename, sep = "") |>
+    # ALL of the steps all over again
+    read_csv(
+        col_names = c(as.character(1:4)),
+        progress = FALSE,
+        show_col_types = FALSE
+    ) |>
+    separate_wider_delim(
+        cols = `4`,
+        # Set the delim and the names
+        delim = ",",
+        names = new_columns
+    ) |>
+    mutate(
+        across(everything(), str_trim),
+        # make "-999" NAs, make "-99" NAs
+        # Create columns BasinNumberYear, Name, and Entries
+        across(everything(), ~na_if(., "-999")),
+        across(everything(), ~na_if(., "-99")),
+        BasinNumberYear = ifelse(is.na(status), `1`, NA),
+        Name = ifelse(is.na(status), `2`, NA),
+        Entries = ifelse(is.na(status), `3`, NA)
+    ) |>
+    relocate(BasinNumberYear, Name, Entries) |>
+    fill(BasinNumberYear, Name, Entries) |>
+    filter(!is.na(status))  |>
+    select(-Entries) |>
+    separate_wider_position(
+        BasinNumberYear,
+        # Specify the widths
+        widths = c(
+        Basin = 2,
+        Number = 2,
+        NameYear = 4
+        )
+    ) |>
+    separate_wider_position(
+        `1`,
+        # Specify the widths
+        widths = c(
+        ObservYear = 4,
+        Month = 2,
+        Day = 2
+        )
+    ) |>
+    separate_wider_position(
+        `2`,
+        # Specify the widths
+        widths = c(
+          Hour = 2,
+          Minute = 2
+        )
+    ) |>
+    rename(
+        Identifier = `3`
+    ) |>
+    mutate(
+        across(
+            c(NameYear, ObservYear, Month, Day, Hour,
+                Minute, Number),
+            as.integer
+        )
+    ) |>
+    mutate(across(max_wind:r_max_wind, as.numeric))
+
+cyclones_data_update_0 <- bind_rows(at_cyclone, np_cyclone)
+
+convert_latlon <- function(latlon) {
+    parse_number(latlon) * if_else(str_detect(latlon, "[WS]"), -1, 1
+  )
+}
+
+cyclones_data_update_1 <- cyclones_data_update_0 |>
+    mutate(
+        lat = convert_latlon(latitude),
+        lon = convert_latlon(longitude)
+    )
+
+cyclones_data_update_2 <- cyclones_data_update_1 |>
+    mutate(
+        date = make_datetime(ObservYear, Month, Day, Hour, Minute)
+    )
+
+cat_levels <- c("TD", "TS", "1", "2", "3", "4", "5")
+
+cyclones_data <- cyclones_data_update_2 |>
+    mutate(
+        category = ordered(
+            case_when(
+                (max_wind <= 33) ~ "TD",
+                (max_wind <= 63) ~ "TS",
+                (max_wind <= 82) ~ "1",
+                (max_wind <= 95) ~ "2",
+                (max_wind <= 112) ~ "3",
+                (max_wind <= 136) ~ "4",
+                (max_wind >= 137) ~ "5"
+                ),
+            levels = cat_levels
+        )
+    )
+
+write_parquet(cyclones_data, sink = "cyclones_data.parquet")
+
 # Put in your code to load in the data set, along with any
 # necessary cleaning beyond what was done in Part 1
 
@@ -31,9 +209,46 @@ The data come from \<<place>\> and describe \<<more specific description of the 
 
 In order to clean the data, we \<\<steps to clean the data, concise but precise enough that a reader could follow your steps without seeing your code\>\>.
 
-## \<\<Data Set 2\>\>
+## \<\<Climate Change\>\>
 
 ```{r load_data2}
+climate_opinion_address <- "https://data.humdata.org/dataset/dc9f2ca4-8b62-4747-89b1-db426ce617a0/resource/6041db5f-8190-47ff-a10b-9841325de841/download/climate_change_opinion_survey_2022_aggregated.xlsx"
+
+climate_sheet_names <- climate_opinion_address |>
+    loadWorkbook() |>
+    names()
+
+aware_sheet_name <- "climate_awareness"
+
+climate_awareness <- climate_opinion_address |>
+    read.xlsx(
+        sheet = aware_sheet_name
+    ) |>
+    pivot_longer(
+        cols = !contains(aware_sheet_name),
+        names_to = "country",
+        values_to = "score"
+    ) |>
+    mutate(
+        climate_awareness = case_when(
+            climate_awareness == "I have never heard of it" ~ "aware_no",
+            climate_awareness == "I know a little about it" ~ "aware_alittle",
+            climate_awareness == "I know a moderate amount about it" ~
+                "aware_moderate",
+            climate_awareness == "I know a lot about it" ~ "aware_alot",
+            climate_awareness == "Refused" ~ "aware_refuse",
+            climate_awareness == "(Unweighted Base)" ~ "aware_base"
+        )
+    ) |>
+    rename(answer = climate_awareness) |>
+    pivot_wider(
+        names_from = answer,
+        values_from = score
+    )
+
+write_parquet(climate_awareness, "climate_awareness.parquet")
+
+
 # Put in your code to load in the data set, along with any
 # necessary cleaning beyond what was done in Part 1
 
@@ -45,9 +260,18 @@ The data come from \<<place>\> and detail \<<more specific description of the da
 
 In order to clean the data, we \<\<steps to clean the data, concise but precise enough that a reader could follow your steps without seeing your code\>\>
 
-## \<\<Data Set 3\>\>
+## \<\<Happiness\>\>
 
 ```{r load_data3}
+happiness <- read.xlsx("DataForTable2.1.xlsx") |>
+    janitor::clean_names() |>
+    rename(country = country_name) |>
+    filter(!is.na(ladder_score)) |>
+    group_by(country) |>
+    arrange(desc(year)) |>
+    slice(1) |>
+    ungroup()
+
 # Put in your code to load in the data set, along with any
 # necessary cleaning beyond what was done in Part 1
 ```
