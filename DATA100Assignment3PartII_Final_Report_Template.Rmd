@@ -1,5 +1,5 @@
 ---
-title: "Correlation between happiness and climate change"
+title: "Exploration of Happiness and Climate Change"
 subtitle: "Exploring Disparate Data: Part 3 - Final Report"
 author: "Old Souls"
 date: "Due November 26th, 2025"
