@@ -13,7 +13,7 @@ List your group members, including their student numbers, here:
 -   Josh Di Maulo (169112454)
 
 # Data Description
-
+In this report, the analysis determined will prove the impact in relationships between happiness of nations, climate change knowledge and environment. These are three international datasets constructed for different purposes, but have a valuable connection between them. The datasets provide varying lenses as to how a population experiences and understands climate change, meaning that by comparing data sets, nations with higher levels of awareness and attention to climate change feel better or worse overall. The first dataset used is a study from the National Hurricane Center, noting cyclones over time with comparison to storm occurrence, strength and locations across locations near oceans. The second dataset is a recent Climate Change Opinion Survey from 2022 which generalizes climate change knowledge in over 100 countries. Lastly, the third data set comes from the World Happiness Report from 2023, which is a more recent data set ranking nations based on social, economic, and institutional considerations. By bringing these sources together, this will help provide a better understanding of a globalized perspective where environmental circumstances, climate change literacy and happiness operate on intersecting planes. Ultimately, this report recognizes growing global patterns and understands how climate conditions and perceptions might otherwise relate to national wellness.
 ```{r}
 knitr::opts_chunk$set(error = TRUE)
 library(tidyverse)
