@@ -533,13 +533,12 @@ print(plot3)
 
 # Conclusion and Future Work
 
-Overall, we found \<<general ideas>\>.
+In terms of implications of the findings, the clearest suggestion is made for awareness, happiness and cyclones relative to the findings. For our happiness and climate awareness, the takeaway is that un-happier countries are not more aware of climate change - Westernized countries i.e. European nations are less happy yet, more aware compared. Thus, awareness of climate change is not a determinant precursor for a nation being less happy. For the cyclone study, findings were middling and more varied for the basins - increasing most likely deadlier for Atlantic cyclones but the patterns of storms in the Pacific are stagnant over the last century with no significant increase nor decrease. Thus, pattern stabilization for climate does not emerge on a generalized basis but stabilization geographically in some parts of the world more than others supports the need to study more localized in the future to garner a more regionally relative assessment.
+Practical implications for the future to consider would be a cyclone exposure index per country to indicate if those who have deadlier storms are more or less aware vs happy; wealth (GDP per capita) would also serve as a control to align where this assessment finds similar across the board success. Furthermore, assessing happiness and climate awareness in 2022/2023 would help longitudinal assessment trends where awareness and happiness here failed to align; assessing other vulnerabilities (i.e. sea level rise for coast nations where cyclones may not be the biggest concern but flooding is) would further support a pattern emerging for those who are more vulnerable in general when it comes to climate change.
+While findings were both enlightening and innovative, limitations must be acknowledged. For example, awareness was taken in 2022 and happiness data in 2023 as respective indicators for those years but same time frame for our assessment purposes. Climate awareness came from self-reported fields meaning social desirability response set bias may increase findings if people think they should know better than indicated. Furthermore, correlation does not equal causation and while we found real-time associations, they were confounded by other confounding factors, trained confounding presence - educational levels, media access, institutional trust - where we couldn't get every variable on the same playing field. Thus, our findings are weakened, not debunked but supported and not debunked due to the potential down the road for more sophisticated modeling.
 
-A second paragraph about our findings.
+This pattern suggests that climate awareness exists within broader societal contexts—countries with strong social support systems, effective governance, and economic stability appear capable of maintaining high life satisfaction even with elevated climate consciousness. The relationship, however, is modest, indicating that happiness is driven by numerous factors beyond environmental awareness.
 
-The next steps in this analysis are...
-
-The limitations of this analysis are as follows. (Do not simply list potential issues with sampling, but relate them to your analysis and how they affect your conclusions. An honest and complete acknowledgement of the limitations makes the analysis more trustworthy.)
 
 # References
 
