@@ -550,6 +550,8 @@ The easiest way is to use Rmd's [footnote](https://bookdown.org/yihui/rmarkdown/
 https://joss.theoj.org/papers/10.21105/joss.01686 
 https://cran.r-project.org/web/packages/countrycode/index.html 
 https://cran.r-project.org/web/packages/knitr/knitr.pdf 
+https://vincentarelbundock.github.io/countrycode/#/ 
+https://vita.had.co.nz/papers/tidy-data.pdf 
 [^1]: See the source view to see this footnote
 
 [^2]: The relevance to the insight is ... . From \<<name of source and name of article>\>, published on \<<date>\>, url: \<<link to page>\>
