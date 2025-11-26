@@ -242,9 +242,11 @@ write_parquet(cyclones_data, sink = "cyclones_data.parquet")
 # with your data, which makes it easier to describe below!
 ```
 
-The data come from \<<place>\> and describe \<<more specific description of the data>\>.
-
-In order to clean the data, we \<\<steps to clean the data, concise but precise enough that a reader could follow your steps without seeing your code\>\>.
+The data come from \<<The National Hurricane Centre (NHC) is the official meteorological data source for United States tropical cyclones. HURDAT2 (the hurricane database) is the record of all known tropical cyclones of the Atlantic Ocean, Gulf of Mexico and Caribbean Sea. It tracks storm position, maximum sustained winds, central atmospheric pressure for every storm within its record. It also has historical storms dating back to the mid-nineteenth century, making it a valuable, long-term data set. It is used by researchers to determine storm patterns, model predictions and long term climatological patterns of storm intensity and frequency.
+The data is processed by putting in the Atlantic and Pacific raw text files, which is non-standard with storm header rows inserted with observational rows. The fourth column is effectively an 18 ¼ separated measurement column with operational names. The program detects header rows and uses them to create storm identifier columns (Basin, Number, Year, Name), which are populated to match observations up with their respective storms.
+Observations are subsequently separated from the header rows. Subsequent, essential date/time (year/month/day/hour/minute) components are extracted from the three string columns. All quantitative measurement fields like max wind and pressure are set from character to numeric while placeholder values like '-999' are replaced with appropriate NAs.
+The Atlantic and Pacific data sets are then merged, along with casting the lat/lon text components ('20.1N') into signed numerics. The extracted elements also facilitate the construction of an appropriate datetime column. A hurricane category variable is created as an ordered factor based on max sustained wind. Every observation is classified between a Tropical Depression to Category 5 based on the speed.
+>\>
 
 ## \<\<Climate Change\>\>
 
