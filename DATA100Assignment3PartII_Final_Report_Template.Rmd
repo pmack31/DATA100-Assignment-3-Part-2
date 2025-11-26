@@ -540,7 +540,9 @@ The limitations of this analysis are as follows. (Do not simply list potential i
 I am not strict about MLA or APA style or anything like that. For this report, I would much rather have your citations be easy to match to your insights.
 
 The easiest way is to use Rmd's [footnote](https://bookdown.org/yihui/rmarkdown/markdown-syntax.html#inline-formatting) syntax. This will put a number beside the word where the footnote appears, and the full text of the footnote at the bottom of the page (pdf) or end of the document (html). The syntax is:[^1], where I suggest that you put in something like this[^2] to make references for this assignment.
-
+https://joss.theoj.org/papers/10.21105/joss.01686 
+https://cran.r-project.org/web/packages/countrycode/index.html 
+https://cran.r-project.org/web/packages/knitr/knitr.pdf 
 [^1]: See the source view to see this footnote
 
 [^2]: The relevance to the insight is ... . From \<<name of source and name of article>\>, published on \<<date>\>, url: \<<link to page>\>
